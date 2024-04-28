@@ -36,6 +36,50 @@ FROM bảng
 GROUP BY cột1,cột2
 
 --4. BUILT-IN FUNCTION
+--4.1. AGGREGATE FUNCTIONS - HÀM TỔNG HỢP
+SUM()
+AVG()
+MIN()
+MAX()
+COUNT()
+
+--4.2. SCALAR FUNCTION
+---STRING:
+LENGTH(cột): đếm ký tự cột
+LOWER(cột): viết thường
+UPPER(cột): viết hoa
+
+LEFT(cột,số): lấy số ký tự từ bên trái
+RIGHT(cột, số): lấy số ký tự từ bên phải
+
+CONCAT('cụm'/cột1,...n) - 'cụm'/cột1 || 'cụm'/cột2 || ...n: nối
+POSITION('kí tự' in cột)
+SUBSTRING(cột from vị trí for số lượng): trích xuất cụm ký tự theo vị trí và số lượng nhất định trong cột
+REPLACE(cột/cụm kí tự,'kí tự cần thay thế','kí tự mới')
+
+---MATHEMATICAL
+ABS(): lấy giá trị tuyệt đối (-24 = 24)
+ROUND(cột,số): làm tròn số số thập phân (24.444 = 24.44)
+CEILING(): làm tròn lên số nguyên lớn hơn gần nhất (25)
+FLOOR(): làm tròn xuống số nguyên bé hơn gần nhất (24)
+--more: https://learn.microsoft.com/en-us/sql/t-sql/functions/mathematical-functions-transact-sql?view=sql-server-ver16
+
+---DATE AND TIME
+EXTRACT(FIELD FROM NGÀY/THÁNG/KHOẢNG THỜI GIAN(INTERVAL): trích xuất trường mong muốn từ cụm/khoảng thời gian
+Field: DATE/TIME/MONTH/DOW...
+--more: https://www.w3schools.com/sql/func_mysql_extract.asp
+INTERVAL số FIELDS: tính khảong thời gian bất kỳ
+INTERVAL 30 days
+
+SELECT TIMESTAMP('2017-12-31 00:00:10', '10:20:40') => 2017-12-31 10:20:50
+
+---CONVERSION
+TO_CHAR(cột, định hạng): đổi định dạng cột (text)
+  TO_CHAR(payment_date,'dd-mm-yyyy hh:mm:ss'),
+  TO_CHAR(payment_date,'MONTH'),
+  TO_CHAR(payment_date,'yy.yy')
+--more: https://www.techonthenet.com/oracle/functions/to_char.php
+
 --5. JOIN & UNION
 --6. WINDOW FUNCTION
 --7. SUBQUERY & TEMPORARY TABLE
