@@ -81,5 +81,14 @@ TO_CHAR(cột, định hạng): đổi định dạng cột (text)
 --more: https://www.techonthenet.com/oracle/functions/to_char.php
 
 --5. JOIN & UNION
+---JOIN
+Select t1.*,t2.*
+from table1 as T1
+INNER/LEFT/RIGHT/FULL JOIN table2 as T2
+ON t1.key1=t2.key2
+
+
+---UNION
+
 --6. WINDOW FUNCTION
 --7. SUBQUERY & TEMPORARY TABLE
