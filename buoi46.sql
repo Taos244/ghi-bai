@@ -133,3 +133,179 @@ avg(return_date - rental_date) as avg_rent
 from rental
 group by customer_id
 order by avg(return_date - rental_date) desc
+
+--BUOI10
+--JOIN & UNION
+Join de ket hop 2 bang theo chieu ngang
+Union de ket hop 2 ban theo chieu doc
+
+JOIN
+--1. Xac dinh khoa key join
+--- inner join: join tra ve nhung truong trung nhau
+Select t1.*,t2.*
+from table1 as T1
+INNER JOIN table2 as T2
+ON t1.key1=t2.key2
+
+select A.payment_id,A.customer_id,B.first_name,B.last_name
+from payment as A
+inner join customer as B
+ON A.customer_id=B.customer_id
+
+--challenge: hay liet ke co bao nhieu ng chon ghe ngoi theo loai
+--business, economy, comfort
+--fare_condition va count
+select b.fare_conditions,
+count(ticket_no) as soluong
+from boarding_passes as a
+INNER JOIN seats as b
+ON a.seat_no=b.seat_no
+group by b.fare_conditions
+
+--LEFT JOIN - RIGHT JOIN: giong nhau, thuong chi dung left join
+Select t1.*,t2.* --tuy nhu cau
+from table1 as T1 ---table 1 sau from la bang goc - tra tat ca gia tri
+LEFT JOIN table2 as T2 ---table 2 la bang tham chieu, se co N/A neu ko tim thay
+ON t1.key1=t2.key2
+--dịch: hiển thị thông tin bảng 1 và bảng 2 sau khi lấy bảng 1 left join bảng 2 thông qua khóa bảng 1 và bảng 2
+
+Select t1.*,t2.* --tuy nhu cau
+from table1 as T1 ---table 1 sau from bang tham chieu, se co N/A neu ko tim thay
+RIGHT JOIN table2 as T2 ---table 2 la bang la bang goc - tra tat ca gia tri
+ON t1.key1=t2.key2
+--dịch: hiển thị thông tin bảng 1 và bảng 2 sau khi lấy bảng 1 left join bảng 2 thông qua khóa bảng 1 và bảng 2
+
+---TÌM THÔNG TIN CÁC CHUYẾN BAY CỦA TỪNG MÁY BAY
+--B1: xác định bảng
+select * from bookings.aircrafts_data;
+Select * from flights
+--B2: xác định key join:
+-> aircraft_code
+--B3: chọn phương thức
+Select T1.aircraft_code,T2.flight_no
+from aircrafts_data as T1
+LEFT JOIN flights as T2
+ON T1.aircraft_code=T2.aircraft_code
+where T2.flight_no is null --neu muon biet may bay nao ko co chuyen bay nao
+
+--challenge
+--tim hieu ghe nao duoc dat thuong xuyen nhat: 
+--liet ke tat ca cac ghe du chua bao gio duoc dat
+--cho ngoi nao chua bao gio duoc dat
+--HANG ghe nao duoc dat thuong xuyen nhat
+
+Select T1.seat_no,
+count(flight_id) as count_ticket
+from seats as t1
+LEFT JOIN bookings.boarding_passes as t2
+on t1.seat_no=t2.seat_no
+Group by t1.seat_no
+order by count(flight_id) desc -->1A
+
+Select T1.seat_no
+from seats as t1
+LEFT JOIN bookings.boarding_passes as t2
+on t1.seat_no=t2.seat_no
+where T2.seat_no is null --> ko co ghe nao bi trong
+
+Select right(T1.seat_no,1 as line),
+count(flight_id) as count_ticket
+from seats as t1
+LEFT JOIN bookings.boarding_passes as t2
+on t1.seat_no=t2.seat_no
+Group by right(T1.seat_no,1)
+order by count(flight_id) desc --> line A
+
+--FULL JOIN: lay tat ca ban ghi o ca 2 ban, co the null o ca 2 bang
+Select t1.*,t2.*
+from table1 as T1
+FULL JOIN table2 as T2
+ON t1.key1=t2.key2
+
+Select * from boarding_passes as a
+full join tickets as b
+on a.ticket_no=b.ticket_no
+where a.ticket_no is null
+
+--JOIN ON MULTIPLE CONDITIONS: CO >2 KEYS
+---VD: Tinh gia trung binh cua tung so ghe may bay
+--xdinh output, input
+Số ghế; Giá trung bình -> input: 
+
+Select a.seat_no,
+avg(amount) as AVG
+from bookings.boarding_passes as a
+LEFT JOIN ticket_flights as b
+on a.ticket_no=b.ticket_no and a.flight_id=b.flight_id
+group by a.seat_no
+order by avg(amount) desc
+
+--JOIN ON MULTIPLE TABLES: join nhiều bảng
+--số vé, tên kh, giá vé, giờ bay, giờ kthuc
+
+select a.ticket_no,a.passenger_name,b.amount, c.scheduled_departure, c.scheduled_arrival
+from bookings.tickets as a
+inner join bookings.ticket_flights as b ON a.ticket_no=b.ticket_no
+inner join bookings.flights as c on b.flight_id=c.flight_id
+
+--Challenge
+--muon tuy chinh chien dich tuy theo noi khach hang den
+--Truy van first_name, last_name, email, quoc gia cua cac khach hang tu Brazil
+
+select a.first_name,a.last_name,a.email,d.country
+from public.customer as a
+inner join public.address as b on a.address_id=b.address_id
+Inner join public.city as c on b.city_id=c.city_id
+inner join public.country as d on c.country_id=d.country_id
+where d.country='Brazil'
+
+--SELF-JOIN
+CREATE TABLE employee (
+	employee_id INT,
+	name VARCHAR (50),
+	manager_id INT
+);
+
+INSERT INTO employee 
+VALUES
+	(1, 'Liam Smith', NULL),
+	(2, 'Oliver Brown', 1),
+	(3, 'Elijah Jones', 1),
+	(4, 'William Miller', 1),
+	(5, 'James Davis', 2),
+	(6, 'Olivia Hernandez', 2),
+	(7, 'Emma Lopez', 2),
+	(8, 'Sophia Andersen', 2),
+	(9, 'Mia Lee', 3),
+	(10, 'Ava Robinson', 3);
+	
+select emp.employee_id, emp.name as emp_name, emp.manager_id, mng.name as mng_name
+from employee as emp
+LEFT JOIN employee as mng on emp.manager_id=mng.employee_id
+--challenge: tim nhung bo phim co cung thoi luong phim
+--title1, title 2, length
+
+Select f1.Title as title1, f2.title as title2, f1.length
+from film as f1
+Join film as f2 on f1.length=f2.length
+
+--UNION: ghép nối 2 bảng theo chiều dọc
+--so luong cot phai giong nhau
+--data type phai giong nhau
+--UNION loai trung lap, UNION ALL thi ko
+
+Select col1,col2,col3...coln
+from table1
+UNION/UNION ALL
+select col1,col2,col3...coln
+from table2
+UNION/UNION ALL
+select col1,col2,col3...coln
+from table3
+
+Select first_name, 'actor' as source from actor
+UNION ALL
+select first_name,  'customer' as source from customer
+UNION ALL
+select first_name,  'staff' as source from staff
+order by first_name 
