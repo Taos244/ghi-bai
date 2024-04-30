@@ -1,3 +1,9 @@
+PROBLEM SOLVING:
+  Hiểu vấn đề: outcome là gì? nguồn dữ liệu chứa outcome? ttin có sẵn và phái sinh
+  Chia nhỏ vấn đề: Bảng chưa có lấy ở đâu? Các bước để có các trường phái sinh?
+  KH hành động: Mỗi bước nhỏ cho vào CTEs
+  Triển khai: Kiểm tra outcome ở mỗi CTEs, nên đặt tên mỗi CTEs theo step
+  Review: Test & Fix bug
 --1. BASIC QUERY
 SELECT cột FROM bảng AS cot
 SELECT DISTINCT cột FROM bảng AS "Cột" --dùng TV thêm ""
