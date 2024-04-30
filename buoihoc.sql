@@ -354,4 +354,146 @@ group by customer_id) as NEW_TABLE
 inner join customer on new_table.customer_id=customer.customer_id
 where so_luong>30
 
---SUBQUERIES IN Select
+--SUBQUERIES IN Select: ket qua chi duoc la 1 gia tri
+Select * ,
+(select (avg(amount)) from payment) as avg_amount, 
+(select (avg(amount)) from payment) - amount as chenh_lech
+from payment
+
+--Tim so tien chenh lech cua 1 hoa don voi so tien thanh toan max cong ty da nhan duoc
+
+Select payment_id, amount,
+(select max(amount) from payment) as max_amount,
+(select max(amount) from payment) - amount as diff
+from payment
+
+--CORRELATED SUBQUERY
+--truy van con tuong quan
+--CORRELATED SUBQUERY IN WHERE
+--lay thong tin khach hang tu bang customer co tong hoa don>100$
+---C1:
+select a.customer_id, sum(b.amount) as total from customer as a
+join payment as b on a.customer_id=b.customer_id
+group by a.customer_id
+having  sum(b.amount)>100
+order by a.customer_id
+
+---C2: tuong quan: where = Truy vấn trên bảng con với điều kiện phụ thuộc vào bảng chính.
+Select *
+from customer as a
+where customer_id =(Select customer_id
+					from payment as b
+					where b.customer_id=a.customer_id ---neu muon dung = thay vi in, truy van tuong quan
+group by customer_id
+having sum(amount)>100)
+
+--hoac dung in, truy van bthg
+Select *
+from customer as a
+where customer_id in (Select customer_id
+					from payment as b
+group by customer_id
+having sum(amount)>100)
+
+--co the thay bang exists -> chi su dung trong subquery
+Select *
+from customer as a
+where EXISTS(Select customer_id
+					from payment as b
+					where b.customer_id=a.customer_id ---neu muon dung = thay vi in
+group by customer_id
+having sum(amount)>100)
+
+--CORRELATED SUBQUERY IN SELECT
+---Liet ke ma KH, ten KH, ma thanh toan, so tien lon nhat cua tung KH
+ select customer_id, payment_id,
+ (Select max(amount) as max_amount from payment
+  where customer_id=a.customer_id
+ group by customer_id)
+ from payment
+ 
+ Select a.customer_id, a.first_name || a.last_name,b.payment_id,
+ (Select max(amount) from payment 
+  where customer_id=a.customer_id
+ group by customer_id) 
+ from customer as a
+ join payment as b on a.customer_id=b.customer_id
+ group by a.customer_id, a.first_name || a.last_name,b.payment_id
+ order by a.customer_id
+ 
+ --challenge
+ --Liet ke cac khoan thanh toan voi tong so hoa don, tong so tien moi KH phai tra
+ 
+ Select *,
+ (select sum(amount) as sum_amount
+ from payment
+where customer_id=a.customer_id
+ group by customer_id),
+ (select count(payment_id) as count_payments
+ from payment
+ where customer_id=a.customer_id
+ group by customer_id)
+ from payment as a
+ 
+ --lay danh sach cac phim co chi phi thay the lon nhat trong moi loai rating
+ --film_id,title, rating,replacement_cost, avg_replacement_cost
+ 
+ select a.film_id,a.title,a.rating,replacement_cost,
+(select avg(replacement_cost) as avg_replacement_cost
+from film
+where rating=a.rating
+group by a.rating)
+ from film as a
+ where replacement_cost=(select max(replacement_cost) as max_replacement
+ from film
+ where rating=a.rating
+ group by a.rating
+order by max(replacement_cost) desc)
+
+--CTEs: Common Table Expression: Bang chua du lieu tam thoi, coi nhu 1 bang bthg
+--bot phuc tap hon subquery
+
+WITH ten_bang
+AS (
+Select *
+FROM bang
+WHERE...)
+Select * from ten_bang
+
+--vidu: liet ke cac khach hang co >30 hoa don
+--ket qua can: ma KH, ten KH, so luong hoa don, tong so tien, thoi gian thue trung binh
+
+WITH total_payment
+AS (
+Select customer_id, count(payment_id) as so_luong, sum(amount) as so_tien
+from payment
+group by customer_id),
+avg_rentaltime
+AS(
+select customer_id, AVG(return_date - rental_date) as rental_time
+from rental
+group by customer_id)
+Select a.customer_id, a.first_name,b.so_luong,b.so_tien, c.rental_time
+from customer as a
+join total_payment as b on a.customer_id=a.customer_id
+join avg_rentaltime as c on b.customer_id=c.customer_id
+where so_luong>30
+
+--tim nhung hoa don co so tien > so tien trung binh kh do chi tieu/moi hoa don
+--ket qua tra ra gom: ma KH,ten KH SL hoa don, so tien, so tien trung binh
+with twt_soluong
+as(
+select customer_id,
+count (payment_id) as so_luong
+from payment group by customer_id),
+twt_avgamount
+as(
+select customer_id,
+avg (amount) as avg_amount
+from payment group by customer_id)
+select a.customer_id, a.first_name, d.amount, b.so_luong,c.avg_amount
+from customer as a
+join twt_soluong as b on a.customer_id=b.customer_id
+join twt_avgamount as c on a.customer_id=c.customer_id
+join payment as d on d.customer_id=a.customer_id
+where d.amount>c.avg_amount
