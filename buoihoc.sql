@@ -309,3 +309,49 @@ select first_name,  'customer' as source from customer
 UNION ALL
 select first_name,  'staff' as source from staff
 order by first_name 
+
+--BUOI 12
+--SUBQUERIES & CTEs
+---Hieu duoc cach dung Subqueries va CTEs de xu ly nhung truy van phuc tap
+
+--SUBQUERIES: truy vaans con trong 1 truy van
+
+--SUBQUERIES IN WHERE
+--Tim cac hoa don co so tien lon hon so tien trung binh cac hoa don
+
+Select * from payment
+where amount > (Select  avg(amount) from payment)
+
+--tim nhung hoa don cua KH co ten la Adam
+
+Select * from payment
+where customer_id=(select customer_id from customer
+where first_name='MARY') --dung dau = thi subquery phai tra ra ket qua duy nhat
+where customer_id in (select customer_id from customer) -- dung in khi subque=ry ra nhieu ket qua
+
+-- tim nhung bo phim co do dai > trung inh do dai cac bo phim
+select film_id, title from film
+where length>(select avg(length) from film)
+
+--tim nhung bo phim o store 2 it nhat 3 lan
+select film_id, title from film
+where film_id in(select film_id from inventory where store_id=2 group by film_id having count(store_id)>=3)
+
+--tim nhung khach hang den tu Abu Dhabi va da chi tieu nhieu hon 100
+--co the ket hop join cho nhanh o cac bai thuc te khac
+select customer_id, first_name,last_name, email from customer
+where customer_id in(select customer_id from payment
+group by customer_id
+having sum(amount)>100) and address_id in(select address_id from address
+where city_id=(select city_id from city
+where city='Abu Dhabi'))
+
+--SUBQUERIES IN FROM
+--Tim nhung khach hang co nhieu hon 30 hoa don
+Select customer.first_name,customer.last_name,new_table.customer_id,new_table.so_luong from
+(Select customer_id, count(payment_id) as so_luong from payment
+group by customer_id) as NEW_TABLE
+inner join customer on new_table.customer_id=customer.customer_id
+where so_luong>30
+
+--SUBQUERIES IN Select
