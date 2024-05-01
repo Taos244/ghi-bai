@@ -497,3 +497,129 @@ join twt_soluong as b on a.customer_id=b.customer_id
 join twt_avgamount as c on a.customer_id=c.customer_id
 join payment as d on d.customer_id=a.customer_id
 where d.amount>c.avg_amount
+
+--BUOI 14
+--WINDOW FUNCTION (PATITION BY)
+--dung thay cho cau truy van phuc tap
+-- WWindow function voi ham tong hop SUM/AVG/MIN/MAX/COUNT
+---voi ham xep hang RANK, DENSE_RANK, ROW_NUMBER
+---voi ham phan tich LEAD/LAG...
+
+--PATITION la cac khoi rieng biet -> vidu dung SUM se chay theo tung khoi, ma ko gom lai thanh 1 dong
+--Group by ko loi duoc het truong thong tin, nhung PARTITION BY thi co the
+
+SUM(cot) OVER(PARTITION BY cot muon gom nhom) AS ten_cot_moi: Tong tren-chia thanh tung khoi
+
+--Window function voi ham tong hop SUM/AVG/MIN/MAX/COUNT
+--Tinh ti le so tien thanh toan tung ngay voi tong so tien
+--a thanh toan cua moi KH
+--Ma KH, ten KH, ngay thanh toan, so tien thanh toan tai ngay, tong so tien da thanh toan, ti le
+
+--C1: DUng subquery
+Select a.customer_id,b.first_name,a.payment_date,a.amount,
+(select
+sum(amount)
+from payment x
+ where x.customer_id= a.customer_id
+group by customer_id),
+a.amount/(select
+sum(amount)
+from payment x
+ where x.customer_id= a.customer_id
+group by customer_id) as ti_le
+from payment as a
+join customer as b on a.customer_id=b.customer_id
+
+--C2: dung CTE
+with twt_total
+as(
+select customer_id,
+sum(amount) as total
+from payment
+group by customer_id)
+
+Select b.customer_id, b.first_name, a.payment_date, a.amount, c.total,
+a.amount/c.total as ti_le
+from payment as a
+join customer as b on a.customer_id=b.customer_id
+join twt_total as c on c.customer_id=b.customer_id
+
+--C3: dung WINDOW FUNCTION
+Select b.customer_id, b.first_name, a.payment_date, a.amount,
+SUM(a.amount) OVER(PARTITION BY a.customer_id) as total --tinh tong amount gom nhom theo customer_id
+from payment as a
+join customer as b on a.customer_id=b.customer_id
+
+--cong thuc
+Select col1,col2,col3...
+AGG(Col2) OVER(PARTITION BY col1,col2...)
+from table_name
+
+--Challenge:
+---Truy van film_id, title, length, category, thoi luong trung binh cua phim trong category do, sap xep theo film_id
+Select a.film_id, a.title, a.length, c.name as category,
+round(avg(a.length) OVER(PARTITION BY c.name),2) as avg_category
+from film as a
+join film_category as b on a.film_id=b.film_id
+join category as c on b.category_id=c.category_id
+order by film_id
+
+---truy van tra ve tat ca chi tiet cac khoan thnah toan, va so lan thanh toan duoc thuc hien boi KH nay va so tien do
+---sap xep theo payment_id
+
+select *,
+count(payment_id) over(partition by customer_id,amount) so_lan_thanhtoan
+from payment
+order by payment_id
+
+--OVER() WITH ORDER BY
+--voi moi thoi diem,them 1 cot 'tinh den thoi diem day, so tien tt la bnh'
+
+Select payment_date, amount,
+sum(amount) OVER(order by payment_date) as total_amount --cong luy ke theo du lieu da sap xep trong khung cua so OVER()
+from payment
+
+Select payment_date, amount, customer_id,
+sum(amount) OVER(partition by customer_id order by payment_date) as total_amount
+--cong luy ke theo du lieu da sap xep trong khung cua so OVER() va gom nhom theo moi KH
+from payment
+
+--CONG THUC
+Select col1,col2,coln...
+AGG(col2) OVER(PARTITION BY col1.. ORDER BY col3...)
+from table_name
+
+---RANK
+--Hay xep hang do dai phim trong tung the loai
+--film_id, category, length, xep hang
+
+Select a.film_id,c.name as category, a.length,
+RANK() OVER(Partition by c.name order by a.length desc) as rank1, --ko goi dau
+DENSE_RANK() OVER(Partition by c.name order by a.length desc) as rank2, --co goi dau
+ROW_NUMBER() OVER(Partition by c.name order by a.length desc,a.film_id) as rank3 --ko co dong hang
+from film as a
+join film_category as b on a.film_id=b.film_id
+join category as c on b.category_id=c.category_id
+--order by c.name
+
+
+---Truy van tra ve Full name KH, quoc gia, so luong thanh toan ho co
+--tao bang xep hang nhung KH co doanh thu cao nhat cho moi quoc gia
+--loc ket qua chi 3 KH dau moi quoc gia
+
+Select * from
+(
+select a.first_name ||' '||a.last_name as full_name, d.country,
+count(*) as so_luong,
+sum(e.amount) as amount,
+RANK() OVER(PARTITION BY d.country order by sum(e.amount) desc) as STT
+from customer a
+join address as b on a.address_id=b.address_id
+join city as c on b.city_id=c.city_id
+join country as d on c.country_id=d.country_id
+join payment as e on a.customer_id=e.customer_id
+Group by a.first_name ||' '||a.last_name,  d.country
+) as t
+where STT<=3
+
+--FIRST_VALUE
