@@ -623,3 +623,55 @@ Group by a.first_name ||' '||a.last_name,  d.country
 where STT<=3
 
 --FIRST_VALUE
+--So tien thanh toan cho hoa don dau tien va gan day nhat cua tung KH
+Select * from
+(
+select customer_id, payment_date,amount,
+ROW_NUMBER() OVER(PARTITION BY customer_id order by payment_date) as stt -->don gan nhat de desc
+from payment) as a
+Where stt=1
+
+select customer_id, payment_date,amount,
+FIRST_VALUE(amount) OVER(PARTITION BY customer_id order by payment_date) as first_amount,
+--gia tri dau tien cua amount theo order by, phan nhom theo payment_date, lay gia tru dau tien
+FIRST_VALUE(amount) OVER(PARTITION BY customer_id order by payment_date DESC) as last_amount
+from payment
+
+--LEAD(): tao 1 cot du lieu voi gia tri tiep theo trong cot duoc chon
+--LAG(): tao 1 cot du lieu voi gia tri truoc do trong cot duoc chon
+--tim chenh lech so tien giua cac lan thanh toan cua tung KH
+
+select
+customer_id,
+payment_date,
+amount,
+LEAD(amount,1) OVER(PARTITION BY customer_id ORder by payment_date) as next_amount, --1 optional
+LEAD(payment_date,1) OVER(PARTITION BY customer_id ORder by payment_date) as next_paydate,
+amount - (LEAD(amount) OVER(PARTITION BY customer_id ORder by payment_date)) as diff
+from payment
+--trong truong hop ko can gom nhom, chi can xem tong quat theo ngay
+select
+payment_date,
+amount,
+LAG(amount,1) OVER(ORder by payment_date) as prev_amount, --1 optional
+LAG(payment_date,1) OVER(ORder by payment_date) as prev_paydate,
+amount - (LAG(amount) OVER(ORder by payment_date)) as diff
+from payment
+
+--challenge
+--Truy van tra ve:doanh thu trong ngay, doanh thu hom truoc,
+--tinh phan tram tang truong so voi ngay hom truoc
+
+with twt_main_payment as(
+select date(payment_date) as payment_date,
+SUM(amount) as amount
+from payment
+group by date(payment_date))
+
+select payment_date,
+amount,
+LAG(amount) OVER(order by payment_date) as prev_amount,
+LAG(payment_date) OVER(order by payment_date) as prev_date,
+ROUND(((amount - LAG(amount) OVER(order by payment_date))
+ /LAG(amount) OVER(order by payment_date))*100,2) as ti_le
+From twt_main_payment
