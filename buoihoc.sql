@@ -675,3 +675,185 @@ LAG(payment_date) OVER(order by payment_date) as prev_date,
 ROUND(((amount - LAG(amount) OVER(order by payment_date))
  /LAG(amount) OVER(order by payment_date))*100,2) as ti_le
 From twt_main_payment
+
+--BUOI17
+--DATA DEFINE LANGUAGE (DQL): CREATE, DROP, ALTER TRUNCATE
+---anh huong den cau truc doi tuong
+--DATA MANIPULATION LANGUAGE (DML): INSERT, UPDATE, DELETE
+---anh huong den truc tiep du lieu den doi tuong(bảng)
+
+---Trong xay dung data pipline
+--quan tam den: khoa chinh, khoa ngoai, constraints, data type
+Constraints:
+--la nhg quy tac ap dung tren cot dl/bảng
+--de kiểm tra tinh hop le cua data đầu vào
+--đảm bảo tính chính xác của dl
+- NOT NULL:cot ko nhan null
+- DEFAULT: gan gia tri mac dinh cho cot blank/null
+- UNIQUE:du lieu ko trung lap tren 1 cot, null van ok
+- PRIMARY KEY: thiet lap khoa chinh tren bang, dam bao bang unique ko cho phep null
+- FOREIGN KEY: tham chieu den bang khac, ket noi cac bang khac thong qua gia tri cot lket - phai la duy nhat trong bang con lai
+- CHECK: dam bao gia tri trong cot thoa man dk nao do, pho bien de kiem tra tinh hop le dl (validate data)
+
+select * from actor
+select * from actor_info
+--bang view la bang ao co ndung dn thong qua 1 cau lenh sql, co hang va cot nhu bang thuc
+--co the luu nhg cau lenh/bang co the luu vao view
+
+--DDL: CREATE, DROP, ALTER
+CREATE TABLE manager
+(
+	Manager_id INT PRIMARY KEY,
+	user_name VARCHAR(20) UNIQUE,
+	first_name VARCHAR(50),
+	last_name VARCHAR(50)DEFAULT 'no info',
+	date_of_birth DATE,
+	Address_id INT
+)
+
+DROP TABLE manager
+
+--truy van dl de lay ds KH va dchi tương ứng
+--sau đó lưu ttin vào bảng và đặt tên customer_id
+(customer_id,full_name,email, address)
+CREATE TABLE customer_info AS
+(Select a.customer_id,
+a.first_name || a.last_name as full_name,
+a.email,
+b.address
+from customer as a
+join address as b on a.address_id=b.address_id)
+
+select * from customer_info
+DROP TABLE customer_info
+-->la bang VAT LY nen neu bang goc cap nhat dl
+--> bang moi se ko cap nhat theo
+
+--bang tạm tắt tab mất - TEMP
+CREATE TEMP TABLE tmp_customer_info AS
+(Select a.customer_id,
+a.first_name || a.last_name as full_name,
+a.email,
+b.address
+from customer as a
+join address as b on a.address_id=b.address_id)
+
+--- GLOBAL TEMP nhieu nguoi co the truy cap
+CREATE GLOBAL TEMP TABLE customer_info AS
+(Select a.customer_id,
+a.first_name || a.last_name as full_name,
+a.email,
+b.address
+from customer as a
+join address as b on a.address_id=b.address_id)
+--khac cte vi co the goi bat cu luc nao trong phien lam viec
+--ko can boi den ca doan tao bang
+
+--Tao bang view se thay doi dl theo realtime,luu tai views
+CREATE VIEW vw_customer_info AS
+(Select a.customer_id,
+a.first_name || a.last_name as full_name,
+a.email,
+b.address
+from customer as a
+join address as b on a.address_id=b.address_id)
+
+
+--Neu muon cap nhat bang view
+CREATE OR REPLACE VIEW vw_customer_info AS
+(Select a.customer_id,
+a.first_name || a.last_name as full_name,
+a.email,
+b.address,
+a.active
+from customer as a
+join address as b on a.address_id=b.address_id)
+
+DROP VIEW public.vw_customer_info -> xoa bang view
+
+select * from vw_customer_info
+
+--Challenge
+--tao view movies_category hien thi:
+--title,length,category_name sap xep giam dan theo length
+--loc chi de Action va Comedy
+
+CREATE OR REPLACE VIEW movies_category as
+(Select
+a.title,
+a.length,
+c.name as category_name
+from film as a
+join film_category as b on a.film_id=b.film_id
+join category as c on b.category_id=c.category_id
+order by length desc)
+
+Select * from movies_category
+where category_name in('Action', 'Comedy')
+
+--DDL: ADD, DELETE, RENAME, ALTER TABLE
+--ADD,DELETE columns
+ALTER TABLE manager
+DROP first_name
+
+Alter table manager
+ADD column first_name VARCHAR(50)
+--RENAME columns
+ALTER TABLE manager
+RENAME column first_name TO ten_qly
+--ALTER data type
+ALTER TABLE manager
+ALTER column ten_qly type text
+
+Select * from manager
+
+-- DML: INSERT, UPDATE, DELETE, TRUNCATE
+select * from city
+
+--INSERT: là insert dòng vào cột đã có sẵn
+INSERT INTO city -- neu ko noi la cot nao, mac dinh insert het
+VALUES(1000,'A',44,'2020-01-01 16:10:20'), --insert 1 dong du lieu
+(1001,'B',33,'2020-02-01 16:10:20') -- dong thu 2
+---neu ko insert tat ca cac truong thi...
+INSERT INTO city (city, country_id)
+VALUES('C',44)
+
+select * from city
+where city='C' -- kiem tra cai vua them
+
+--UPDATE
+UPDATE city
+SET country_id=100
+where city_id=3
+
+--challenge: gia cho thue film 0.99 -> 1.99
+--Dieu chinh bang customer:
+--them cot initials varchar(10)
+--Update du lieu cot initials vd:Frank Smith -> F.s
+
+UPDATE film
+SET rental_rate=1.99
+where rental_rate=0.99
+
+Select * from film;
+
+Select * from customer;
+
+ALTER TABLE customer
+ADD column initials varchar (10);
+
+UPDATE customer
+SET initials=(left(first_name,1)||'.'|| left(last_name,1))
+--DELETE + TRUNCATE:xoa 1 hoac tat ca dong du lieu
+INSERT INTO manager
+VALUES(1,'HAPT','Tran','1997-01-01',20,'Ha'),
+(2,'NGANDP','DOAN','1987-01-01',12,'Ngan'),
+(3,'DUNGHT','Hoang','1991-02-10',19,'Thao');
+
+Select * from manager
+
+DELETE from manager --xoa het dong thong tin neu ko loc
+where manager_id=1
+
+--DELETE xoa quét từng dòng, TRUNCATE xoa het luon
+TRUNCATE TABLE manager
