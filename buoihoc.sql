@@ -677,7 +677,7 @@ ROUND(((amount - LAG(amount) OVER(order by payment_date))
 From twt_main_payment
 
 --BUOI17
---DATA DEFINE LANGUAGE (DQL): CREATE, DROP, ALTER TRUNCATE
+--DATA DEFINE LANGUAGE (DDL): CREATE, DROP, ALTER TRUNCATE
 ---anh huong den cau truc doi tuong
 --DATA MANIPULATION LANGUAGE (DML): INSERT, UPDATE, DELETE
 ---anh huong den truc tiep du lieu den doi tuong(bảng)
