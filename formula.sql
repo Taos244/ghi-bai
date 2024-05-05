@@ -93,8 +93,75 @@ from table1 as T1
 INNER/LEFT/RIGHT/FULL JOIN table2 as T2
 ON t1.key1=t2.key2
 
-
+INNER JOIN: trả về những trường trùng nhau
+LEFT JOIN(gốc sau from)/RIGHT JOIN(gốc sau right join): trả tất cả giá trị của bảng gốc, bảng quy chiếu sẽ có Null
+FULL JOIN: trả về tất cả giá trị ở các bảng -> có thể có null
 ---UNION
+--Nối n bảng theo chiều dọc
+  --Cần trùng cột
+Select col1,col2,col3...coln
+from table1
+UNION/UNION ALL
+select col1,col2,col3...coln
+from table2
+UNION/UNION ALL
+select col1,col2,col3...coln
+from table3
 
---6. WINDOW FUNCTION
---7. SUBQUERY & TEMPORARY TABLE
+--6. SUBQUERY & TEMPORARY TABLE
+---Để xử lý các vấn đề phức tạp
+  ---Thường dùng cte cho dễ đọc
+---SUBQUERIES in WHERE
+(tìm tất cả hóa đơn của KH tên là Adam)
+->
+Select * from payment
+where customer_id=(select customer_id from customer
+where first_name='MARY') --dùng dấu = khi sub trả 1 kết quả duy nhất
+where customer_id in (select customer_id from customer) -- dùng IN khi sub trả nhiều kết quả
+  
+---SUBQUERIES in FROM
+(Tim nhung khach hang co nhieu hon 30 hoa don)
+->
+Select customer.first_name,customer.last_name,new_table.customer_id,new_table.so_luong from
+(Select customer_id, count(payment_id) as so_luong from payment
+group by customer_id) as NEW_TABLE
+inner join customer on new_table.customer_id=customer.customer_id
+where so_luong>30
+
+---SUBQUERIES in SELECT
+----Kết quả sub chỉ được là 1 giá trị
+(Tim so tien chenh lech cua 1 hoa don voi so tien thanh toan max cong ty da nhan duoc)
+->
+Select payment_id, amount,
+(select max(amount) from payment) as max_amount,
+(select max(amount) from payment) - amount as diff
+from payment
+
+---CORRELATED SUB: bảng con có điều kiện phụ thuộc vào bảng chính
+Select *
+from customer as a
+where customer_id =(Select customer_id
+					from payment as b
+					where b.customer_id=a.customer_id ---Điều kiện phụ thuộc -> có thể dùng = thay vì dùng IN
+group by customer_id
+having sum(amount)>100)
+HOẶC dùng EXISTS : chỉ sử dụng trong sub
+Select *
+from customer as a
+where EXISTS(Select customer_id
+					from payment as b
+					where b.customer_id=a.customer_id ---neu muon dung = thay vi in
+group by customer_id
+having sum(amount)>100)
+**SAME trong WHERE/FROM/SELECT
+
+---CTE: Bảng chứa dữ liệu tạm thời, coi như bảng bthg
+  --phải bôi khi chyaj lệnh
+WITH ten_bang
+AS (
+Select *
+FROM bang
+WHERE...)
+Select * from ten_bang
+
+--7. WINDOW FUNCTION
