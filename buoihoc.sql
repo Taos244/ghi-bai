@@ -857,3 +857,22 @@ where manager_id=1
 
 --DELETE xoa quét từng dòng, TRUNCATE xoa het luon
 TRUNCATE TABLE manager
+
+--BUOI20: COHORT ANALYSIS USING SQL(phân tích tổ hợp)
+--> tìm ra insight KH
+---Concept
+---Áp dụng vào SQL vào bài toán phân tích tổ hợp
+Cách đọc
+- Size: hàng tháng/tuần/năm
+- Index: chỉ số)
+- Chiều ngang thể hiện tgian tồn tại của người dùng, luôn tham chiếu đến lần đầu(sản phẩm/hỗ trợ KH...
+- Chiều dọc cho thấy sự cải thiện theo thời gian, SL kH còn lại theo từng tháng
+- Chhieeuf chéo, ko pbien, số mua hàng thực sự theo từng tháng, cộng đường chéo
+
+--CÁC LOẠI
+Customer
+Customer retention
+customer chum (KH rời đi)
+Net revenue
+Net dollar
+--APPLY INTO SQL
